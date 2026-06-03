@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جوليا جودات | المهندسة الرقمية - التصميم الجديد</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0d0d0d;
+            overflow-x: hidden;
+        }
+
+        /* Canvas 3D خلفية */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* الحاوية الرئيسية */
+        .main-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* القائمة الجانبية المنزلقة */
+        .side-menu {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            border-radius: 60px;
+            padding: 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 100;
+            border: 1px solid rgba(162, 155, 254, 0.4);
+            box-shadow: 0 0 20px rgba(162, 155, 254, 0.2);
+        }
+
+        .menu-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #a29bfe;
+            font-size: 1.5rem;
+        }
+
+        .menu-icon:hover, .menu-icon.active {
+            background: #a29bfe;
+            color: #0d0d0d;
+            box-shadow: 0 0 20px #a29bfe;
+            transform: scale(1.1);
+        }
+
+        /* المحتوى الرئيسي */
+        .content {
+            min-height: 100vh;
+            padding: 2rem 5rem 2rem 2rem;
+        }
+
+        /* البطاقات الثورية */
+        .revolution-card {
+            background: rgba(25, 25, 45, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid;
+            border-image: linear-gradient(135deg, #a29bfe, #c39bd3) 1;
+            transition: all 0.4s;
+            transform-style: preserve-3d;
+        }
+
+        .revolution-card:hover {
+            transform: translateZ(30px) rotateX(5deg);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.5), 0 0 30px rgba(162, 155, 254, 0.3);
+        }
+
+        .revolution-card p, .revolution-card li, .revolution-card div {
+            color: #f0f0f0 !important;
+        }
+
+        .revolution-card strong {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+
+        /* الهيدر المتفجر */
+        .explode-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        /* صورة البروفايل */
+        .profile-image {
+            width: 160px;
+            height: 160px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morphing 6s infinite;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 0 50px rgba(162, 155, 254, 0.5);
+            object-fit: cover;
+            border: 2px solid rgba(162, 155, 254, 0.5);
+        }
+
+        /* الصورة الرمزية الاحتياطية */
+        .avatar-placeholder {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, #c39bd3, #a29bfe, #c39bd3);
+            background-size: 200% 200%;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            animation: morphing 6s infinite, gradientShift 3s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 0 50px rgba(162, 155, 254, 0.5);
+        }
+
+        .avatar-placeholder i {
+            font-size: 80px;
+            color: white;
+            text-shadow: 0 0 20px #c39bd3;
+        }
+
+        @keyframes morphing {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 58% 42% 75% 25% / 43% 37% 63% 57%; }
+            50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+            75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
+            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a29bfe, #c39bd3, #f1c40f);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: textGlow 2s infinite;
+        }
+
+        @keyframes textGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px #a29bfe); }
+            50% { filter: drop-shadow(0 0 20px #c39bd3); }
+        }
+
+        .explode-header p {
+            color: #ffffff !important;
+            font-weight: 500;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+
+        /* المربعات ثلاثية الأبعاد للخبرات والشهادات */
+        .experience-grid, .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.8rem;
+            margin: 1rem 0;
+        }
+
+        .exp-3d-card, .cert-3d-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 24px;
+            padding: 1.5rem;
+            border: 1px solid rgba(162, 155, 254, 0.3);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            animation: fadeInUp 0.6s ease backwards;
+            cursor: pointer;
+            position: relative;
+            min-height: 140px;
+            perspective: 500px;
+            transform-style: preserve-3d;
+        }
+
+        .exp-3d-card:nth-child(1), .cert-3d-card:nth-child(1) { animation-delay: 0.1s; }
+        .exp-3d-card:nth-child(2), .cert-3d-card:nth-child(2) { animation-delay: 0.2s; }
+        .exp-3d-card:nth-child(3), .cert-3d-card:nth-child(3) { animation-delay: 0.3s; }
+        .exp-3d-card:nth-child(4), .cert-3d-card:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* التأثير ثلاثي الأبعاد عند الوقوف */
+        .exp-3d-card:hover, .cert-3d-card:hover {
+            transform: translateY(-8px) scale(1.02) rotateX(3deg);
+            border-color: #c39bd3;
+            box-shadow: 0 20px 35px rgba(195, 155, 211, 0.3);
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        /* العنوان الأساسي (الظاهر دائماً) */
+        .exp-3d-card h3, .cert-3d-card h3 {
+            color: #a29bfe !important;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        /* اسم الشركة باللون البنفسجي الخفيف */
+        .exp-3d-card .company {
+            color: #c39bd3 !important;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* التفاصيل المخفية تظهر عند المرور */
+        .exp-details, .cert-details {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .exp-3d-card:hover .exp-details, .cert-3d-card:hover .cert-details {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: 0.8rem;
+        }
+
+        .exp-details p, .cert-details p {
+            margin: 0.3rem 0;
+            font-size: 0.9rem;
+            color: #dddddd !important;
+        }
+
+        .exp-details i, .cert-details i {
+            color: #a29bfe;
+            margin-left: 0.5rem;
+            width: 20px;
+        }
+
+        /* أزرار التواصل الاجتماعية */
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .social-btn {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 60px;
+            padding: 0.8rem 1.8rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(162, 155, 254, 0.3);
+            color: #f0f0f0;
+        }
+
+        .social-btn i {
+            font-size: 1.5rem;
+        }
+
+        .social-btn span {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        /* ألوان السوشيال ميديا عند الهوفر */
+        .instagram-btn:hover {
+            background: #E4405F;
+            border-color: #E4405F;
+            color: white;
+            box-shadow: 0 0 20px #E4405F;
+        }
+        .linkedin-btn:hover {
+            background: #0077B5;
+            border-color: #0077B5;
+            color: white;
+            box-shadow: 0 0 20px #0077B5;
+        }
+        .twitter-btn:hover {
+            background: #1DA1F2;
+            border-color: #1DA1F2;
+            color: white;
+            box-shadow: 0 0 20px #1DA1F2;
+        }
+        .youtube-btn:hover {
+            background: #FF0000;
+            border-color: #FF0000;
+            color: white;
+            box-shadow: 0 0 20px #FF0000;
+        }
+        .email-btn:hover {
+            background: #a29bfe;
+            border-color: #a29bfe;
+            color: white;
+            box-shadow: 0 0 20px #a29bfe;
+        }
+        .whatsapp-btn:hover {
+            background: #25D366;
+            border-color: #25D366;
+            color: white;
+            box-shadow: 0 0 20px #25D366;
+        }
+
+        /* أزرار التواصل في الأسفل */
+        .contact-buttons-bottom {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .contact-button {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 60px;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+            border: 1px solid rgba(162, 155, 254, 0.3);
+            min-width: 200px;
+            justify-content: center;
+        }
+
+        .contact-button i {
+            font-size: 1.8rem;
+        }
+
+        .contact-button span {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chaos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .chaos-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 28px;
+            padding: 1.5rem;
+            border-left: 5px solid #a29bfe;
+            transition: 0.3s;
+        }
+
+        .chaos-card:hover {
+            border-left-color: #c39bd3;
+            transform: skewX(-2deg) translateY(-5px);
+            background: rgba(162, 155, 254, 0.15);
+        }
+
+        .chaos-card h3 {
+            color: #ffffff !important;
+            margin: 0.5rem 0;
+        }
+
+        .chaos-card p {
+            color: #dddddd !important;
+        }
+
+        .chaos-card i {
+            font-size: 2rem;
+            color: #a29bfe !important;
+        }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #a29bfe, #c39bd3);
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            display: inline-block;
+            margin: 0.3rem;
+            font-weight: bold;
+            color: #0d0d0d;
+        }
+
+        .neon-btn {
+            background: none;
+            border: 2px solid #a29bfe;
+            color: #a29bfe;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .neon-btn:hover {
+            background: #a29bfe;
+            color: black;
+            box-shadow: 0 0 30px #a29bfe;
+        }
+
+        #newContactForm input, #newContactForm textarea {
+            background: rgba(0, 0, 0, 0.7) !important;
+            border: 1px solid #a29bfe;
+            padding: 1rem;
+            border-radius: 20px;
+            color: white !important;
+            font-size: 1rem;
+        }
+        #newContactForm input::placeholder, #newContactForm textarea::placeholder {
+            color: #cccccc;
+        }
+        #newContactForm input:focus, #newContactForm textarea:focus {
+            outline: none;
+            border-color: #c39bd3;
+        }
+
+        .page-section {
+            display: none;
+        }
+        .page-section.active-section {
+            display: block;
+            animation: slideUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px) rotateX(10deg); }
+            to { opacity: 1; transform: translateY(0) rotateX(0); }
+        }
+
+        .revolution-card h2 {
+            color: #a29bfe !important;
+            margin-bottom: 1rem;
+        }
+        .revolution-card h2 i {
+            margin-left: 0.5rem;
+        }
+
+        progress {
+            accent-color: #a29bfe;
+        }
+        progress::-webkit-progress-bar {
+            background-color: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+        progress::-webkit-progress-value {
+            background-color: #a29bfe;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .content { padding: 2rem 1rem; }
+            h1 { font-size: 2rem; }
+            .side-menu { right: 10px; }
+            .menu-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+            .contact-button { padding: 0.7rem 1.2rem; }
+            .contact-button i { font-size: 1.3rem; }
+            .contact-button span { font-size: 0.9rem; }
+            .social-btn { padding: 0.5rem 1rem; }
+            .social-btn span { display: none; }
+            .social-btn i { font-size: 1.2rem; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<div class="main-wrapper">
+    <!-- القائمة الجانبية -->
+    <div class="side-menu">
+        <div class="menu-icon" data-section="home"><i class="fas fa-home"></i></div>
+        <div class="menu-icon" data-section="exp"><i class="fas fa-briefcase"></i></div>
+        <div class="menu-icon" data-section="skills"><i class="fas fa-code"></i></div>
+        <div class="menu-icon" data-section="contact"><i class="fas fa-paper-plane"></i></div>
+    </div>
+
+    <div class="content">
+        <!-- الصفحة الرئيسية -->
+        <div id="home" class="page-section active-section">
+            <div class="explode-header">
+                <img src="fcd33275-6491-4960-abb0-9bb8c2ba9477.jpg" alt="صورة جوليا" class="profile-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="avatar-placeholder" style="display: none;">
+                    <i class="fas fa-user-astronaut"></i>
+                </div>
+                
+                <h1>جوليا جودات سالم</h1>
+                <p style="font-size: 1.3rem; color: #a29bfe; margin-top: 0.5rem;">⎯ المهندسة الرقمية ⎯</p>
+                <div style="margin: 1rem 0;">
+                    <span class="skill-tag"><i class="fas fa-phone"></i> 0539462273</span>
+                    <span class="skill-tag"><i class="fas fa-envelope"></i> Jwlyajwdat539@gmail.com</span>
+                    <span class="skill-tag"><i class="fas fa-map-marker-alt"></i> الرياض</span>
+                </div>
+            </div>
+            <div class="revolution-card">
+                <h2 style="color: #c39bd3; margin-bottom: 1rem;">⚡ مقدمة غير تقليدية</h2>
+                <p style="font-size: 1.1rem; line-height: 1.7; color: #f0f0f0;">خريجة علوم حاسب 2023، لديها جنون الإبداع الرقمي. متخصصة في تسخير الذكاء الاصطناعي لإنتاج محتوى يبهر، وإدارة متاجر إلكترونية تحقق أرقاماً خيالية. أحول الأفكار إلى واقع رقمي.</p>
+            </div>
+            <div class="chaos-grid">
+                <div class="chaos-card"><i class="fas fa-robot"></i><h3>خبيرة AI</h3><p>إنتاج فيديوهات ومحتوى بالذكاء الاصطناعي</p></div>
+                <div class="chaos-card"><i class="fas fa-chart-line"></i><h3>تسويق رقمي</h3><p>خطط تسويقية مدروسة بنتائج مضمونة</p></div>
+                <div class="chaos-card"><i class="fas fa-store"></i><h3>متاجر إلكترونية</h3><p>إدارة شاملة وزيادة المبيعات</p></div>
+            </div>
+        </div>
+
+        <!-- صفحة الخبرات والشهادات -->
+        <div id="exp" class="page-section">
+            <div class="revolution-card">
+                <h2 style="color: #a29bfe;"><i class="fas fa-briefcase"></i> الخبرات المهنية</h2>
+                <div class="experience-grid">
+                    <div class="exp-3d-card">
+                        <h3><i class="fas fa-chart-line"></i> أخصائية تسويق وإدارة محتوى</h3>
+                        <div class="company">🏢 متجر "سهرات وألوان"</div>
+                        <div class="exp-details">
+                            <p><i class="fas fa-check-circle"></i> إدارة شاملة للمتجر الإلكتروني</p>
+                            <p><i class="fas fa-video"></i> إنتاج فيديوهات ترويجية بالذكاء الاصطناعي</p>
+                            <p><i class="fas fa-palette"></i> تطوير الهوية البصرية وزيادة التفاعل</p>
+                        </div>
+                    </div>
+                    <div class="exp-3d-card">
+                        <h3><i class="fas fa-headset"></i> أخصائية منصات تواصل وخدمة عملاء</h3>
+                        <div class="company">🏢 شركة "كنز غرناطة"</div>
+                        <div class="exp-details">
+                            <p><i class="fas fa-calendar-alt"></i> إدارة المحتوى المرئي وجدولة النشر</p>
+                            <p><i class="fas fa-phone"></i> خدمة عملاء بمعدل 20 مكالمة يومياً</p>
+                            <p><i class="fas fa-smile"></i> تحسين تجربة العملاء</p>
+                        </div>
+                    </div>
+                    <div class="exp-3d-card">
+                        <h3><i class="fas fa-chart-simple"></i> مخطط تسويق</h3>
+                        <div class="company">🏢 مكتب خدمات عامة</div>
+                        <div class="exp-details">
+                            <p><i class="fas fa-calendar-week"></i> خطة تسويقية متكاملة لمدة 3 أشهر</p>
+                            <p><i class="fas fa-bullhorn"></i> إدارة الحملات الرقمية</p>
+                            <p><i class="fas fa-pen-fancy"></i> تطوير المحتوى التسويقي</p>
+                        </div>
+                    </div>
+                    <div class="exp-3d-card">
+                        <h3><i class="fas fa-coins"></i> مسؤولة إدارية ومالية</h3>
+                        <div class="company">🏢 شركة سلك إم إم</div>
+                        <div class="exp-details">
+                            <p><i class="fas fa-file-invoice-dollar"></i> إعداد التقارير المالية</p>
+                            <p><i class="fas fa-file-alt"></i> متابعة الفواتير ومراجعة المخزون</p>
+                            <p><i class="fas fa-chart-line"></i> توثيق حركة المبيعات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="revolution-card">
+                <h2 style="color: #c39bd3;"><i class="fas fa-certificate"></i> الشهادات والدورات</h2>
+                <div class="cert-grid">
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-graduation-cap"></i> بكالوريوس علوم حاسب</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-university"></i> جامعة العلوم والثقافة</p>
+                            <p><i class="fas fa-calendar"></i> 2018 - 2023</p>
+                            <p><i class="fas fa-star"></i> دفعة 2023</p>
+                        </div>
+                    </div>
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-brain"></i> منحة Women Elevate</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-microchip"></i> تخصص: الذكاء الاصطناعي</p>
+                            <p><i class="fas fa-certificate"></i> شهادة احترافية متقدمة</p>
+                        </div>
+                    </div>
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-chart-line"></i> التسويق الإلكتروني</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-ad"></i> استراتيجيات التسويق الرقمي</p>
+                            <p><i class="fas fa-facebook"></i> إدارة الحملات الإعلانية</p>
+                        </div>
+                    </div>
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-chart-simple"></i> إدارة المبيعات</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-tasks"></i> تقنيات البيع الاحترافية</p>
+                            <p><i class="fas fa-users"></i> إدارة فرق المبيعات</p>
+                        </div>
+                    </div>
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-video"></i> مونتاج الفيديوهات</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-cut"></i> تحرير ومونتاج احترافي</p>
+                            <p><i class="fas fa-magic"></i> مؤثرات بصرية متقدمة</p>
+                        </div>
+                    </div>
+                    <div class="cert-3d-card">
+                        <h3><i class="fas fa-microphone-alt"></i> متحدثة محترفة</h3>
+                        <div class="cert-details">
+                            <p><i class="fas fa-comments"></i> مهارات الإلقاء والتحدث</p>
+                            <p><i class="fas fa-users"></i> فعاليات دعم المشاريع الناشئة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة المهارات -->
+        <div id="skills" class="page-section">
+            <div class="revolution-card">
+                <h2 style="color: #a29bfe;"><i class="fas fa-cogs"></i> المهارات التقنية والإبداعية</h2>
+                <div style="margin-top: 1rem;">
+                    <div style="color: #f0f0f0; margin-bottom: 0.8rem;"><strong>📊 التسويق الرقمي</strong> <progress value="95" max="100" style="width: 100%; height: 10px; border-radius: 10px;"></progress></div>
+                    <div style="color: #f0f0f0; margin-bottom: 0.8rem;"><strong>🎨 إنتاج محتوى AI</strong> <progress value="90" max="100" style="width: 100%;"></progress></div>
+                    <div style="color: #f0f0f0; margin-bottom: 0.8rem;"><strong>📋 إدارة المشاريع</strong> <progress value="88" max="100"></progress></div>
+                    <div style="color: #f0f0f0; margin-bottom: 0.8rem;"><strong>💬 خدمة العملاء</strong> <progress value="92" max="100"></progress></div>
+                </div>
+            </div>
+            <div class="revolution-card">
+                <h2 style="color: #c39bd3;"><i class="fas fa-tags"></i> المهارات التفصيلية</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="skill-tag">الخطط التسويقية</span>
+                    <span class="skill-tag">إدارة المتاجر الإلكترونية</span>
+                    <span class="skill-tag">الحملات الممولة</span>
+                    <span class="skill-tag">خدمة العملاء</span>
+                    <span class="skill-tag">إنتاج فيديو بالـ AI</span>
+                    <span class="skill-tag">تصميم جرافيكي</span>
+                    <span class="skill-tag">تصوير احترافي</span>
+                    <span class="skill-tag">إدارة الميزانيات</span>
+                    <span class="skill-tag">مراجعة المخازن</span>
+                    <span class="skill-tag">إعداد التقارير</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- صفحة الاتصال -->
+        <div id="contact" class="page-section">
+            <div class="revolution-card">
+                <h2 style="color: #a29bfe; margin-bottom: 1.5rem;"><i class="fas fa-headset"></i> تواصل معي</h2>
+                
+                <!-- نموذج الاتصال -->
+                <form id="newContactForm" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <input type="text" placeholder="الاسم" id="contactName">
+                    <input type="email" placeholder="البريد" id="contactEmail">
+                    <textarea rows="4" placeholder="رسالتك..." id="contactMsg"></textarea>
+                    <button type="submit" class="neon-btn" style="width: fit-content;">إرسال الرسالة <i class="fas fa-arrow-left"></i></button>
+                </form>
+                <div id="contactStatus" style="margin-top: 1rem; color: #00ff00;"></div>
+
+                <!-- أزرار التواصل الاجتماعية -->
+                <div class="social-buttons">
+                    <a href="https://instagram.com/julia_digital" target="_blank" class="social-btn instagram-btn">
+                        <i class="fab fa-instagram"></i>
+                        <span>انستغرام</span>
+                    </a>
+                    <a href="https://linkedin.com/in/julia-joudat" target="_blank" class="social-btn linkedin-btn">
+                        <i class="fab fa-linkedin-in"></i>
+                        <span>لينكد إن</span>
+                    </a>
+                    <a href="https://twitter.com/julia_digital" target="_blank" class="social-btn twitter-btn">
+                        <i class="fab fa-twitter"></i>
+                        <span>تويتر</span>
+                    </a>
+                    <a href="https://youtube.com/@julia_digital" target="_blank" class="social-btn youtube-btn">
+                        <i class="fab fa-youtube"></i>
+                        <span>يوتيوب</span>
+                    </a>
+                </div>
+
+                <!-- أزرار التواصل المباشر -->
+                <div class="contact-buttons-bottom">
+                    <a href="mailto:Jwlyajwdat539@gmail.com" class="contact-button email-btn">
+                        <i class="fas fa-envelope"></i>
+                        <span>البريد الإلكتروني</span>
+                    </a>
+                    <a href="https://wa.me/966539462273" target="_blank" class="contact-button whatsapp-btn">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>واتساب</span>
+                    </a>
+                </div>
+
+                <div style="margin-top: 1rem; text-align: center; color: #f0f0f0;">
+                    <p><i class="fab fa-instagram" style="color: #a29bfe;"></i> @julia_digital</p>
+                    <p><i class="fab fa-linkedin" style="color: #c39bd3;"></i> جوليا جودات سالم</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // خلفية Canvas 3D متحركة
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    let particles = [];
+    for (let i = 0; i < 100; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            radius: Math.random() * 2 + 1,
+            speedX: (Math.random() - 0.5) * 2,
+            speedY: (Math.random() - 0.5) * 2,
+            color: `hsl(${Math.random() * 60 + 260}, 70%, 65%)`
+        });
+    }
+    
+    function draw() {
+        if (!ctx) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#0d0d0d';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        particles.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = p.color;
+            ctx.fill();
+            p.x += p.speedX;
+            p.y += p.speedY;
+            if (p.x < 0) p.x = canvas.width;
+            if (p.x > canvas.width) p.x = 0;
+            if (p.y < 0) p.y = canvas.height;
+            if (p.y > canvas.height) p.y = 0;
+        });
+        requestAnimationFrame(draw);
+    }
+    draw();
+    
+    // إظهار الصورة أو الplaceholder
+    const profileImg = document.querySelector('.profile-image');
+    const placeholder = document.querySelector('.avatar-placeholder');
+    if (profileImg && profileImg.complete && profileImg.naturalWidth === 0) {
+        profileImg.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'flex';
+    }
+    
+    // التنقل بين الأقسام
+    const sections = document.querySelectorAll('.page-section');
+    const menuIcons = document.querySelectorAll('.menu-icon');
+    
+    function switchToSection(sectionId) {
+        sections.forEach(sec => sec.classList.remove('active-section'));
+        document.getElementById(sectionId).classList.add('active-section');
+        menuIcons.forEach(icon => {
+            icon.classList.remove('active');
+            if (icon.getAttribute('data-section') === sectionId) icon.classList.add('active');
+        });
+    }
+    
+    menuIcons.forEach(icon => {
+        icon.addEventListener('click', () => {
+            const sectionId = icon.getAttribute('data-section');
+            switchToSection(sectionId);
+        });
+    });
+    
+    // تفعيل نموذج الاتصال
+    document.getElementById('newContactForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = document.getElementById('contactName').value;
+        const statusDiv = document.getElementById('contactStatus');
+        if (name.trim()) {
+            statusDiv.innerHTML = '✅ تم إرسال رسالتك بنجاح! سأعود لك قريباً 💫';
+            this.reset();
+        } else {
+            statusDiv.innerHTML = '❌ الرجاء إدخال اسمك';
+        }
+        setTimeout(() => statusDiv.innerHTML = '', 4000);
+    });
+</script>
+</body>
+</html>
